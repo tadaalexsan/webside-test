@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-center mb-8">سبد خرید</h1>
+
+    {% if messages %}
+    <div class="mb-8">
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-error{% endif %} shadow-lg">
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    {% if message.tags == 'error' %}
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    {% else %}
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    {% endif %}
+                </svg>
+                <span>{{ message }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if cart_items %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Cart Items -->
+        <div class="lg:col-span-2">
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">محصولات</h2>
+                    <div class="space-y-4">
+                        {% for item in cart_items %}
+                        <div class="flex items-center gap-4">
+                            {% if item.product.image_url %}
+                            <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="w-24 h-24 object-cover rounded-lg">
+                            {% else %}
+                            <div class="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            {% endif %}
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-lg">{{ item.product.name }}</h3>
+                                <p class="text-gray-500">{{ item.product.price }} تومان</p>
+                                <div class="flex items-center gap-4 mt-2">
+                                    <form method="post" action="{% url 'update_cart' item.id %}" class="join">
+                                        {% csrf_token %}
+                                        <button type="submit" name="action" value="decrease" class="btn btn-sm join-item" {% if item.quantity <= 1 %}disabled{% endif %}>-</button>
+                                        <span class="btn btn-sm join-item no-animation">{{ item.quantity }}</span>
+                                        <button type="submit" name="action" value="increase" class="btn btn-sm join-item">+</button>
+                                    </form>
+                                    <form method="post" action="{% url 'remove_from_cart' item.id %}" class="ml-auto">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-ghost btn-sm text-error">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold">{{ item.get_total }} تومان</p>
+                            </div>
+                        </div>
+                        {% if not forloop.last %}
+                        <div class="divider"></div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="lg:col-span-1">
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">خلاصه سبد خرید</h2>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-500">جمع سبد خرید:</span>
+                            <span class="font-semibold">{{ cart_total }} تومان</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-500">هزینه ارسال:</span>
+                            <span class="font-semibold">رایگان</span>
+                        </div>
+                        <div class="divider"></div>
+                        <div class="flex justify-between items-center text-lg font-bold">
+                            <span>مبلغ قابل پرداخت:</span>
+                            <span>{{ cart_total }} تومان</span>
+                        </div>
+                        <a href="{% url 'checkout' %}" class="btn btn-primary w-full">ادامه فرآیند خرید</a>
+                        <a href="{% url 'product_list' %}" class="btn btn-ghost w-full">ادامه خرید</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+        <div class="text-gray-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            <p class="text-xl">سبد خرید شما خالی است</p>
+            <a href="{% url 'product_list' %}" class="btn btn-primary mt-4">مشاهده محصولات</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add loading state to quantity update buttons
+    const forms = document.querySelectorAll('form[action*="update_cart"]');
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const buttons = this.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.classList.add('loading');
+                button.disabled = true;
+            });
+        });
+    });
+
+    // Add loading state to remove buttons
+    const removeForms = document.querySelectorAll('form[action*="remove_from_cart"]');
+    removeForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const button = this.querySelector('button');
+            button.classList.add('loading');
+            button.disabled = true;
+        });
+    });
+        // Set a timer to remove messages after 10 seconds
+        setTimeout(function() {
+            const messages = document.querySelectorAll('.message');
+            messages.forEach(function(msg) {
+                msg.remove();
+            });
+        }, 10000); // 10000 milliseconds = 10 seconds
+
+});
+</script>
+{% endblock %}
+{% endblock %} 
